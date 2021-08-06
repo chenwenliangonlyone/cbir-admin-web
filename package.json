@@ -1,8 +1,8 @@
 {
-  "name": "eladmin-web",
+  "name": "cbiradmin-web",
   "version": "2.6.0",
-  "description": "EL-ADMIN 前端源码",
-  "author": "Zheng Jie",
+  "description": "CBIRADMIN 前端源码",
+  "author": "",
   "license": "Apache-2.0",
   "scripts": {
     "dev": "vue-cli-service serve",
@@ -24,13 +24,6 @@
       "eslint --fix",
       "git add"
     ]
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/elunez/eladmin-web.git"
-  },
-  "bugs": {
-    "url": "https://github.com/elunez/eladmin/issues"
   },
   "dependencies": {
     "@riophae/vue-treeselect": "0.4.0",
