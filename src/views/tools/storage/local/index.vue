@@ -9,7 +9,7 @@
         <rrOperation />
       </div>
       <crudOperation :permission="permission">
-        <!-- 新增 -->
+        <!-- 上传 -->
         <el-button
           slot="left"
           v-permission="['admin','storage:add']"
@@ -25,23 +25,45 @@
     <!--表单组件-->
     <el-dialog append-to-body :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.add ? '文件上传' : '编辑文件'" width="500px">
       <el-form ref="form" :model="form" size="small" label-width="80px">
-        <el-form-item label="文件名">
-          <el-input v-model="form.name" style="width: 370px;" />
+        <el-form-item label="标签" prop="labels">
+          <el-select
+            filterable
+            v-model="form.id"
+            style="width: 360px"
+            placeholder="请选择"
+            @change="changeLabel"
+          >
+            <el-option
+              v-for="item in labels"
+              :key="item.id"
+              :label="item.labelName"
+              :value="item.id"
+            />
+          </el-select>
         </el-form-item>
         <!--   上传文件   -->
         <el-form-item v-if="crud.status.add" label="上传">
           <el-upload
             ref="upload"
-            :limit="1"
-            :before-upload="beforeUpload"
+            drag
+            :limit="9"
+            list-type="picture"
             :auto-upload="false"
+            :on-change="onChange"
+            :on-exceed="onExceed"
+            :before-upload="beforeUpload"
             :headers="headers"
             :on-success="handleSuccess"
             :on-error="handleError"
-            :action="fileUploadApi + '?name=' + form.name"
+            :action="imagesUploadApi"
+            :data="uploadParams"
+            enctype="multipart/form-data"
+            :file-list="fileList"
+            :multiple="true"
+            style="position: relative;"
           >
-            <div class="cbiradmin-upload"><i class="el-icon-upload" /> 添加文件</div>
-            <div slot="tip" class="el-upload__tip">可上传任意格式文件，且不超过100M</div>
+            <div ><i class="el-icon-upload" /> 添加图片</div>
+            <div slot="tip" class="el-upload__tip">请上传jpg、jpeg、png、bmp格式图片，且不超过100M</div>
           </el-upload>
         </el-form-item>
       </el-form>
@@ -57,7 +79,7 @@
       <el-table-column prop="name" label="文件名">
         <template slot-scope="scope">
           <el-popover
-            :content="'file/' + scope.row.type + '/' + scope.row.realName"
+            :content="'file/' + scope.row.labelId + '/' + scope.row.realName"
             placement="top-start"
             title="路径"
             width="200"
@@ -65,7 +87,7 @@
           >
             <a
               slot="reference"
-              :href="baseApi + '/file/' + scope.row.type + '/' + scope.row.realName"
+              :href="baseApi + '/file/' + scope.row.labelId + '/' + scope.row.realName"
               class="el-link--primary"
               style="word-break:keep-all;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color: #1890ff;font-size: 13px;"
               target="_blank"
@@ -78,8 +100,8 @@
       <el-table-column prop="path" label="预览图">
         <template slot-scope="{row}">
           <el-image
-            :src=" baseApi + '/file/' + row.type + '/' + row.realName"
-            :preview-src-list="[baseApi + '/file/' + row.type + '/' + row.realName]"
+            :src=" baseApi + '/file/' + row.labelId + '/' + row.realName"
+            :preview-src-list="[baseApi + '/file/' + row.labelId + '/' + row.realName]"
             fit="contain"
             lazy
             class="el-avatar"
@@ -91,9 +113,11 @@
         </template>
       </el-table-column>
       <el-table-column prop="suffix" label="文件类型" />
-      <el-table-column prop="type" label="类别" />
+<!--      <el-table-column prop="type" label="类别" />-->
       <el-table-column prop="size" label="大小" />
-      <el-table-column prop="operate" label="操作人" />
+      <el-table-column prop="labelId" label="标签ID" />
+      <el-table-column prop="labelName" label="标签名称" />
+      <el-table-column prop="createBy" label="操作人" />
       <el-table-column prop="createTime" label="创建日期" />
     </el-table>
     <!--分页组件-->
@@ -104,6 +128,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import { getToken } from '@/utils/auth'
+import { getAllLabel } from '@/api/tools/localStorage'
 import crudFile from '@/api/tools/localStorage'
 import CRUD, { presenter, header, form, crud } from '@crud/crud'
 import rrOperation from '@crud/RR.operation'
@@ -111,7 +136,7 @@ import crudOperation from '@crud/CRUD.operation'
 import pagination from '@crud/Pagination'
 import DateRangePicker from '@/components/DateRangePicker'
 
-const defaultForm = { id: null, name: '' }
+const defaultForm = { id: null, labelName: '', labels: [], fileList: [], uploadParams: {}}
 export default {
   components: { pagination, crudOperation, rrOperation, DateRangePicker },
   cruds() {
@@ -120,6 +145,9 @@ export default {
   mixins: [presenter(), header(), form(defaultForm), crud()],
   data() {
     return {
+      uploadParams: {},
+      labels: [],
+      fileList: [],
       delAllLoading: false,
       loading: false,
       headers: { 'Authorization': getToken() },
@@ -132,28 +160,53 @@ export default {
   computed: {
     ...mapGetters([
       'baseApi',
-      'fileUploadApi'
+      'imagesUploadApi'
     ])
   },
   created() {
     this.crud.optShow.add = false
   },
   methods: {
+    // 标签选择下拉框
+    changeLabel(value) {
+      this.id = value
+      // 获取下拉框的label 从整个labels列表中用value遍历
+      this.labelName = value ? this.labels.find(ele => ele.id === value).labelName : ''
+    },
+    // 获取所有标签数据
+    getLabels() {
+      getAllLabel().then(res => {
+        this.labels = res.content
+      }).catch(() => { })
+    },
+    // 新增与编辑前做的操作
+    [CRUD.HOOK.afterToCU](crud, form) {
+      this.getLabels()
+    },
     // 上传文件
     upload() {
       this.$refs.upload.submit()
     },
     beforeUpload(file) {
-      let isLt2M = true
-      isLt2M = file.size / 1024 / 1024 < 100
-      if (!isLt2M) {
-        this.loading = false
-        this.$message.error('上传文件大小不能超过 100MB!')
+      //  返回false会调用on-remove把图片列表都清除
+      if (this.id == null || this.labelName === '') {
+        this.$message({
+          message: '标签不能为空',
+          type: 'warning'
+        })
+        return false
+      } else if (this.fileList.length === 0) {
+        this.$message({
+          message: '图片不能为空',
+          type: 'warning'
+        })
+        return false
       }
-      this.form.name = file.name
-      return isLt2M
+      // url参数
+      this.uploadParams = { 'id': this.id, 'labelName': this.labelName }
     },
     handleSuccess(response, file, fileList) {
+      debugger
       this.crud.notify('上传成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
       this.$refs.upload.clearFiles()
       this.crud.status.add = CRUD.STATUS.NORMAL
@@ -162,6 +215,7 @@ export default {
     },
     // 监听上传失败
     handleError(e, file, fileList) {
+      debugger
       const msg = JSON.parse(e.message)
       this.$notify({
         title: msg.message,
@@ -169,6 +223,19 @@ export default {
         duration: 2500
       })
       this.loading = false
+    },
+    onChange(file, fileList) {
+      // url参数
+      this.uploadParams = { 'id': this.id, 'labelName': this.labelName }
+      // 文件
+      this.fileList = fileList
+    },
+    onExceed(files, fileList) {
+      this.$message({
+        message: '一次最多上传9张图片',
+        type: 'warning'
+      })
+      return false
     }
   }
 }

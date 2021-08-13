@@ -1,6 +1,6 @@
 <template>
   <el-tabs v-model="activeName" style="padding-left: 8px;" @tab-click="tabClick">
-    <el-tab-pane label="图片存储" name="first">
+    <el-tab-pane label="图像入库" name="first">
       <Local ref="local" />
     </el-tab-pane>
 <!--    <el-tab-pane label="云存储" name="second">-->

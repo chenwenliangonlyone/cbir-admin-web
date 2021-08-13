@@ -1,20 +1,8 @@
 import request from '@/utils/request'
-export function getAllLabel() {
-  const params = {
-    page: 0,
-    size: 9999,
-    enabled: true
-  }
-  return request({
-    url: 'api/label',
-    method: 'get',
-    params
-  })
-}
 
 export function add(data) {
   return request({
-    url: 'api/localStorage',
+    url: 'api/label',
     method: 'post',
     data
   })
@@ -22,7 +10,7 @@ export function add(data) {
 
 export function del(ids) {
   return request({
-    url: 'api/localStorage/',
+    url: 'api/label/',
     method: 'delete',
     data: ids
   })
@@ -30,7 +18,7 @@ export function del(ids) {
 
 export function edit(data) {
   return request({
-    url: 'api/localStorage',
+    url: 'api/label',
     method: 'put',
     data
   })
