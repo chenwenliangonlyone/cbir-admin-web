@@ -28,7 +28,7 @@
         <el-form-item label="标签" prop="labels">
           <el-select
             filterable
-            v-model="form.id"
+            v-model="form.labelName"
             style="width: 360px"
             placeholder="请选择"
             @change="changeLabel"
@@ -136,7 +136,7 @@ import crudOperation from '@crud/CRUD.operation'
 import pagination from '@crud/Pagination'
 import DateRangePicker from '@/components/DateRangePicker'
 
-const defaultForm = { id: null, labelName: '', labels: [], fileList: [], uploadParams: {}}
+const defaultForm = { id: null, labelId: '', labelName: '', labels: [], fileList: [], uploadParams: {}}
 export default {
   components: { pagination, crudOperation, rrOperation, DateRangePicker },
   cruds() {
@@ -169,7 +169,7 @@ export default {
   methods: {
     // 标签选择下拉框
     changeLabel(value) {
-      this.id = value
+      this.labelId = value
       // 获取下拉框的label 从整个labels列表中用value遍历
       this.labelName = value ? this.labels.find(ele => ele.id === value).labelName : ''
     },
@@ -178,6 +178,12 @@ export default {
       getAllLabel().then(res => {
         this.labels = res.content
       }).catch(() => { })
+    },
+    // 编辑修改点击确认之前 更新crud的值用于后台修改
+    // 如果标签id支持修改 那要将图像移动到相应的标签id文件夹下
+    [CRUD.HOOK.beforeSubmit](crud) {
+      crud.form.labelId = this.labelId
+      crud.form.labelName = this.labelName
     },
     // 新增与编辑前做的操作
     [CRUD.HOOK.afterToCU](crud, form) {
@@ -189,7 +195,7 @@ export default {
     },
     beforeUpload(file) {
       //  返回false会调用on-remove把图片列表都清除
-      if (this.id == null || this.labelName === '') {
+      if (this.labelId == null || this.labelName === '') {
         this.$message({
           message: '标签不能为空',
           type: 'warning'
@@ -203,10 +209,9 @@ export default {
         return false
       }
       // url参数
-      this.uploadParams = { 'id': this.id, 'labelName': this.labelName }
+      this.uploadParams = { 'labelId': this.labelId, 'labelName': this.labelName }
     },
     handleSuccess(response, file, fileList) {
-      debugger
       this.crud.notify('上传成功', CRUD.NOTIFICATION_TYPE.SUCCESS)
       this.$refs.upload.clearFiles()
       this.crud.status.add = CRUD.STATUS.NORMAL
@@ -215,7 +220,6 @@ export default {
     },
     // 监听上传失败
     handleError(e, file, fileList) {
-      debugger
       const msg = JSON.parse(e.message)
       this.$notify({
         title: msg.message,
@@ -226,7 +230,7 @@ export default {
     },
     onChange(file, fileList) {
       // url参数
-      this.uploadParams = { 'id': this.id, 'labelName': this.labelName }
+      this.uploadParams = { 'labelId': this.labelId, 'labelName': this.labelName }
       // 文件
       this.fileList = fileList
     },

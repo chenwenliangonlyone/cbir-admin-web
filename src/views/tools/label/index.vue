@@ -60,13 +60,12 @@ export default {
   },
   mixins: [presenter()],
   // 数据字典
-  // dicts: ['job_status'],
   data() {
     return {
       permission: {
-        add: ['admin', 'job:add'],
-        edit: ['admin', 'job:edit'],
-        del: ['admin', 'job:del']
+        add: ['admin', 'label:add'],
+        edit: ['admin', 'label:edit'],
+        del: ['admin', 'label:del']
       }
     }
   },
