@@ -4,7 +4,6 @@ import Vue from 'vue'
 
 /**
  * CRUD配置
- * @author moxun
  * @param {*} options <br>
  * @return crud instance.
  * @example

@@ -180,7 +180,7 @@ export default {
       }).catch(() => { })
     },
     // 编辑修改点击确认之前 更新crud的值用于后台修改
-    // 如果标签id支持修改 那要将图像移动到相应的标签id文件夹下
+    // 如果标签id支持修改 那要将图像移动到相应的标签id文件夹下(后台操作)
     [CRUD.HOOK.beforeSubmit](crud) {
       crud.form.labelId = this.labelId
       crud.form.labelName = this.labelName
