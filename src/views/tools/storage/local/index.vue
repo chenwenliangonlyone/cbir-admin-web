@@ -46,11 +46,9 @@
           <el-upload
             ref="upload"
             drag
-            :limit="9"
             list-type="picture"
             :auto-upload="false"
             :on-change="onChange"
-            :on-exceed="onExceed"
             :before-upload="beforeUpload"
             :headers="headers"
             :on-success="handleSuccess"
@@ -233,14 +231,14 @@ export default {
       this.uploadParams = { 'labelId': this.labelId, 'labelName': this.labelName }
       // 文件
       this.fileList = fileList
-    },
-    onExceed(files, fileList) {
-      this.$message({
-        message: '一次最多上传9张图片',
-        type: 'warning'
-      })
-      return false
     }
+    // onExceed(files, fileList) {
+    //   this.$message({
+    //     message: '一次最多上传9张图片',
+    //     type: 'warning'
+    //   })
+    //   return false
+    // }
   }
 }
 </script>
